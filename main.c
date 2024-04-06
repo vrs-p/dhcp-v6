@@ -26,7 +26,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    // BIND on all addresses
+//     BIND on all addresses
     memset(&dest, 0, sizeof(dest));
     dest.sin6_family = AF_INET6;
     inet_pton(AF_INET6, "::", &dest.sin6_addr);
@@ -34,8 +34,8 @@ int main() {
         exit(EXIT_FAILURE);
 
     // Join the link-local all nodes multicast group
-    inet_pton (AF_INET6,"ff02::1",&mreq.ipv6mr_multiaddr);
-    mreq.ipv6mr_interface = 0;
+    inet_pton (AF_INET6,"ff02::2",&mreq.ipv6mr_multiaddr);
+    mreq.ipv6mr_interface = if_nametoindex(INTERFACE_NAME);
     if (setsockopt (sockfd,IPPROTO_IPV6,IPV6_ADD_MEMBERSHIP,(char *) &mreq,sizeof (mreq)) < 0)
         exit(EXIT_FAILURE);
 
@@ -54,8 +54,8 @@ int main() {
         {
             printf("Router Solicitation received from: %s\n", inet_ntop(AF_INET6, &client.sin6_addr, buffer, INET6_ADDRSTRLEN));
             // Send Router Advertisement message in response
-//            send_RA_response();
-//            printf("Router Advertisement sent\n");
+            send_router_advertisement_response();
+            printf("Router Advertisement sent\n");
             response_was_sent = 1;
         }
     }

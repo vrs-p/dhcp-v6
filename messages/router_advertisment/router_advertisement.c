@@ -69,11 +69,35 @@ void send_router_advertisement_response() {
     prefix_info->nd_opt_pi_preferred_time = htonl(604800); // Preferred Lifetime: 7 days
     inet_pton(AF_INET6, "2001:db8:1::", &prefix_info->nd_opt_pi_prefix); // Prefix
 
+    option_ptr = packet + sizeof(struct nd_router_advert) + sizeof(struct nd_opt_prefix_info);
+    struct nd_opt_hdr *link_address = (struct nd_opt_hdr *)option_ptr;
+    link_address->nd_opt_type = ND_OPT_SOURCE_LINKADDR;
+    link_address->nd_opt_len = 1;
+    unsigned char mac_address[] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55};
+    memcpy(option_ptr + 2 * sizeof(uint8_t), mac_address, 6);
+
+    option_ptr = option_ptr + sizeof(struct nd_opt_hdr) + 6;
+    struct nd_opt_mtu *mtu = (struct nd_opt_mtu *)option_ptr;
+    mtu->nd_opt_mtu_type = ND_OPT_MTU;
+    mtu->nd_opt_mtu_len = 1;
+    mtu->nd_opt_mtu_reserved = 0;
+    mtu->nd_opt_mtu_mtu = htonl(1500);
+
     // Calculate ICMPv6 checksum
-    ra_hdr->nd_ra_hdr.icmp6_cksum = checksum(packet, sizeof(struct nd_router_advert) + sizeof(struct nd_opt_prefix_info));
+    int packet_size = 0;
+    // RA
+    packet_size += sizeof(struct nd_router_advert);
+    // Prefix info
+    packet_size += sizeof(struct nd_opt_prefix_info);
+    // Link layer address info
+    packet_size += sizeof(struct nd_opt_hdr) + 6;
+    // Mtu info
+    packet_size += sizeof(struct nd_opt_mtu);
+
+    ra_hdr->nd_ra_hdr.icmp6_cksum = checksum(packet, packet_size);
 
     // Send the message
-    if (sendto(sockfd, packet, sizeof(struct nd_router_advert) + sizeof(struct nd_opt_prefix_info), 0, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+    if (sendto(sockfd, packet, packet_size, 0, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         perror("sendto");
         close(sockfd);
         exit(EXIT_FAILURE);
