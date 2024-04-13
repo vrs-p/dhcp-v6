@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 
 #include "messages/router_advertisment/router_advertisement.h"
+#include "server/init.h"
 
 #define BUF_SIZE 1024
 
