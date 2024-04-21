@@ -16,7 +16,7 @@ int main() {
     char buffer[BUF_SIZE];
     struct sockaddr_in6 dest, client;
     struct ipv6_mreq mreq;
-    socklen_t client_len;
+    socklen_t client_len = sizeof(client);
     int bytes_received;
 
 
