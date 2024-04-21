@@ -53,7 +53,7 @@ void send_router_advertisement_response() {
     ra_hdr->nd_ra_hdr.icmp6_code = 0;
     ra_hdr->nd_ra_hdr.icmp6_cksum = 0; // Checksum will be calculated later
     ra_hdr->nd_ra_curhoplimit = 64; // Current Hop Limit
-    ra_hdr->nd_ra_flags_reserved = ND_RA_FLAG_MANAGED | ND_RA_FLAG_OTHER; //ND_RA_FLAG_MANAGED
+    ra_hdr->nd_ra_flags_reserved = ND_RA_FLAG_MANAGED; //ND_RA_FLAG_MANAGED
     ra_hdr->nd_ra_router_lifetime = htons(1800); // Router Lifetime: 1800 seconds
     ra_hdr->nd_ra_reachable = 0; // Router is not reachable time
     ra_hdr->nd_ra_retransmit = 0; // Router is not retransmit timer
