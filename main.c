@@ -12,6 +12,8 @@
 #define BUF_SIZE 1024
 
 int main() {
+//    int sock = init_dhcp_v6();
+//    close(sock);
     int sockfd;
     char buffer[BUF_SIZE];
     struct sockaddr_in6 dest, client;

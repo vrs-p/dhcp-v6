@@ -7,6 +7,7 @@
 
 #include <net/if.h>
 #include "init.h"
+#include "../messages/dhcpv6_advertisement/dhcpv6_advertisment.h"
 
 int init_dhcp_v6() {
     char buffer[1024];
@@ -39,15 +40,20 @@ int init_dhcp_v6() {
     int bytes_received;
     memset(buffer, 0, 1024);
     bytes_received = recvfrom(dhcp_socket, buffer, 1024, 0, (struct sockaddr *)&client, &client_len);
-    printf("RS received");
-
-    unsigned char message_type = buffer[0];
-    if (message_type == 1) {
-        printf("Solicit message received");
-    } else {
-        printf("Something else received");
+    if (bytes_received == -1) {
+        perror("recvfrom");
+        return dhcp_socket;
     }
 
-//    close(dhcp_socket);
+    unsigned char message_type = buffer[0];
+    char data[bytes_received];
+    memcpy(data, buffer, bytes_received);
+    if (message_type == 1) {
+        printf("Solicit message received");
+        send_dhcpv6_advertisement(&client, data, bytes_received, dhcp_socket);
+    } else if (message_type == 3) {
+        printf("Request message received");
+    }
+
     return dhcp_socket;
 }

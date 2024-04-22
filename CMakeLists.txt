@@ -8,4 +8,6 @@ add_executable(dhcp-v6 main.c
         messages/router_advertisment/router_advertisement.h
         server/init.c
         server/init.h
-        structures/dhcpv6_struct/dhcpv6_struct.c)
+        structures/dhcpv6_struct/dhcpv6_struct.c
+        messages/dhcpv6_advertisement/dhcpv6_advertisment.c
+        messages/dhcpv6_advertisement/dhcpv6_advertisment.h)
