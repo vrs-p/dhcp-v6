@@ -14,7 +14,7 @@ int init_dhcp_v6() {
     int dhcp_socket;
     struct sockaddr_in6 my_addr, client;
     struct ipv6_mreq multicast_group;
-    socklen_t client_len;
+    socklen_t client_len = sizeof(client);
 
     // Create a raw socket
     dhcp_socket = socket(AF_INET6, SOCK_DGRAM, 0);
@@ -38,22 +38,35 @@ int init_dhcp_v6() {
 
 
     int bytes_received;
+    int running = 1;
+    int serving_req = 0;
+    struct msg_hdr* served_req = malloc(sizeof(struct msg_hdr));
     memset(buffer, 0, 1024);
-    bytes_received = recvfrom(dhcp_socket, buffer, 1024, 0, (struct sockaddr *)&client, &client_len);
-    if (bytes_received == -1) {
-        perror("recvfrom");
-        return dhcp_socket;
+
+    while (running) {
+        bytes_received = recvfrom(dhcp_socket, buffer, 1024, 0, (struct sockaddr *)&client, &client_len);
+        if (bytes_received == -1) {
+            perror("recvfrom");
+            running = 0;
+            continue;
+        }
+
+        struct msg_hdr* current_req = (struct msg_hdr*)buffer;
+        char data[bytes_received];
+        memcpy(data, buffer, bytes_received);
+
+        if (serving_req == 0 && current_req->type == 1) {
+            printf("Solicit message received");
+            serving_req = 1;
+            memcpy(served_req, current_req, sizeof(struct msg_hdr));
+            send_dhcpv6_advertisement(&client, data, bytes_received, dhcp_socket);
+        } else if (serving_req == 1 && current_req->type == 3 && memcmp(served_req, current_req, sizeof(struct msg_hdr)) == 0) {
+            printf("Request message received");
+            serving_req = 0;
+            memset(served_req, 0, sizeof(struct msg_hdr));
+        }
     }
 
-    unsigned char message_type = buffer[0];
-    char data[bytes_received];
-    memcpy(data, buffer, bytes_received);
-    if (message_type == 1) {
-        printf("Solicit message received");
-        send_dhcpv6_advertisement(&client, data, bytes_received, dhcp_socket);
-    } else if (message_type == 3) {
-        printf("Request message received");
-    }
-
+    free(served_req);
     return dhcp_socket;
 }
