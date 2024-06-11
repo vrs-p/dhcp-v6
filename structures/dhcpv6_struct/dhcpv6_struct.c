@@ -32,17 +32,6 @@ struct msg_hdr {
  */
 struct opt_hdr {
     uint16_t t;
-# define OPT_CLIENTID		htons_constant(1)
-# define OPT_SERVERID		htons_constant(2)
-# define OPT_IA_NA		htons_constant(3)
-# define OPT_IA_TA		htons_constant(4)
-# define OPT_IAAADR		htons_constant(5)
-# define OPT_STATUS_CODE	htons_constant(13)
-# define  STATUS_NOTONLINK	htons_constant(4)
-# define OPT_DNS_SERVERS	htons_constant(23)
-# define OPT_DNS_SEARCH		htons_constant(24)
-#define   STR_NOTONLINK		"Prefix not appropriate for link."
-
     uint16_t l;
 } __attribute__((packed));
 
@@ -53,7 +42,7 @@ struct opt_hdr {
  */
 struct opt_client_id {
     struct opt_hdr hdr;
-    uint8_t duid[128];
+    uint8_t duid[];
 } __attribute__((packed));
 
 struct opt_server_id {

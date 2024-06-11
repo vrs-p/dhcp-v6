@@ -52,6 +52,7 @@ int init_dhcp_v6() {
         }
 
         struct msg_hdr* current_req = (struct msg_hdr*)buffer;
+        struct sockaddr_in6* cl = malloc(sizeof(struct sockaddr_in6));
         char data[bytes_received];
         memcpy(data, buffer, bytes_received);
 
@@ -59,11 +60,14 @@ int init_dhcp_v6() {
             printf("Solicit message received");
             serving_req = 1;
             memcpy(served_req, current_req, sizeof(struct msg_hdr));
-            send_dhcpv6_advertisement(&client, data, bytes_received, dhcp_socket);
+            memcpy(cl, &client, sizeof(struct sockaddr_in6));
+            send_dhcpv6_advertisement(cl, data, bytes_received, dhcp_socket);
         } else if (serving_req == 1 && current_req->type == 3 && memcmp(served_req, current_req, sizeof(struct msg_hdr)) == 0) {
             printf("Request message received");
             serving_req = 0;
+            // reply
             memset(served_req, 0, sizeof(struct msg_hdr));
+            free(cl);
         }
     }
 
