@@ -55,3 +55,8 @@ struct opt_client_id {
     struct opt_hdr hdr;
     uint8_t duid[128];
 } __attribute__((packed));
+
+struct opt_server_id {
+    struct opt_hdr hdr;
+    uint8_t duid[128];
+} __attribute__((packed));

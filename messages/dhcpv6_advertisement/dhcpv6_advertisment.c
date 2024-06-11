@@ -9,6 +9,36 @@
 
 #include <arpa/inet.h>
 
+int read_machine_id(uint8_t **duid, size_t *duid_len) {
+    FILE *file = fopen("/etc/machine-id", "r");
+    if (!file) {
+        perror("Failed to open /etc/machine-id");
+        return -1;
+    }
+
+    char hex_string[33]; // /etc/machine-id is 32 characters long
+    if (fgets(hex_string, sizeof(hex_string), file) == NULL) {
+        perror("Failed to read /etc/machine-id");
+        fclose(file);
+        return -1;
+    }
+    fclose(file);
+
+    // Convert hex string to byte array
+    *duid_len = strlen(hex_string) / 2;
+    *duid = malloc(*duid_len);
+    if (!*duid) {
+        perror("Failed to allocate memory for DUID");
+        return -1;
+    }
+
+    for (size_t i = 0; i < *duid_len; i++) {
+        sscanf(&hex_string[i * 2], "%2hhx", &(*duid)[i]);
+    }
+
+    return 0;
+}
+
 int find_offset_option(char *data, uint16_t option, int bytes_received) {
     size_t current_offset = sizeof(struct msg_hdr) + 1;
     while (current_offset <= bytes_received) {
@@ -35,11 +65,25 @@ void send_dhcpv6_advertisement(struct sockaddr_in6 *client, char *solicit_data, 
     header->type = 2;
     header->xid = client_header->xid;
 
-//    server identifier TODO: needs to be generated, now it's only copy paste from client
+// Prepare server identifier
+    struct opt_server_id server_identifier;
+    server_identifier.hdr.t = 2;
+
+    uint8_t *server_duid;
+    size_t server_duid_len;
+
+    if (read_machine_id(&server_duid, &server_duid_len) != 0) {
+        fprintf(stderr, "Error reading machine ID\n");
+        return;
+    }
+
+    server_identifier.hdr.l = htons(server_duid_len);
+    memcpy(server_identifier.duid, server_duid, server_duid_len);
+
+    // Copy server identifier to message
     pointer = pointer + sizeof(struct msg_hdr);
-    msg_size += sizeof(struct opt_hdr) + client_identifier->hdr.l;
-    client_identifier->hdr.t = 2;
-    memcpy(pointer, client_identifier, sizeof(struct opt_hdr) + client_identifier->hdr.l);
+    memcpy(pointer, &server_identifier, sizeof(struct opt_hdr) + server_duid_len);
+    msg_size += sizeof(struct opt_hdr) + server_duid_len;
 
 //    client identifier
     pointer = pointer + sizeof(struct opt_hdr) + client_identifier->hdr.l;
