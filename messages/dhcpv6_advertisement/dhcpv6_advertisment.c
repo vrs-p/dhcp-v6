@@ -40,10 +40,12 @@ void send_dhcpv6_advertisement(struct sockaddr_in6 *client, char *solicit_data, 
     memcpy(pointer, client_identifier, sizeof(struct opt_hdr) + client_identifier->hdr.l);
 
 //    client identifier
-    pointer = pointer + sizeof(struct opt_hdr) + client_identifier->hdr.l;
+    pointer = pointer + sizeof(struct msg_hdr);
     msg_size += sizeof(struct opt_hdr) + client_identifier->hdr.l;
-    client_identifier->hdr.t = 1;
-    memcpy(pointer, client_identifier, sizeof(struct opt_hdr) + client_identifier->hdr.l);
+    client_identifier->hdr.t = htons(1);
+    client_identifier->hdr.l = htons(client_identifier->hdr.l);
+
+    memcpy(pointer, client_identifier, sizeof(struct opt_hdr) + htons(client_identifier->hdr.l));
 
 //    create client address
     client->sin6_port = htons(546);
