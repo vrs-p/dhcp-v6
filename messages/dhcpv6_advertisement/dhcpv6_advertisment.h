@@ -23,7 +23,7 @@ typedef struct ia_address {
 // Identity Association for Non-temporary Addresses
 typedef struct ia_na {
     struct opt_hdr hdr;     // option header -> type and length
-    uint32_t iaid;          // IAID (Identity Assoctiation ID) //TODO: maybe change to correct format
+    uint32_t iaid;          // IAID (Identity Assoctiation ID)
     uint32_t t1;            // T1 (time to start renewing)
     uint32_t t2;            // T2 (time to start rebinding)
     IA_ADDR iaAddr;
