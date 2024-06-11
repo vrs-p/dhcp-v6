@@ -95,29 +95,25 @@ void send_dhcpv6_advertisement(struct sockaddr_in6 *client, char *solicit_data, 
 
 
 //    IA definition
+    // IAADDR
+    IA_ADDR iaaddr;
+    iaaddr.hdr.t = htons(DHCPV6_OPTION_IAADDR);
+    iaaddr.hdr.l = htons(24);
+    inet_pton(AF_INET6, "2001:db8::1", &iaaddr.addr);  // example IPv6 address
+    iaaddr.preferred_lifetime = htonl(86400);  // example preferred lifetime
+    iaaddr.valid_lifetime = htonl(172800);  // example valid lifetime
     // IANA
-//    IA_NA ia_na;
-//    ia_na.hdr.t = DHCPV6_OPTION_IA_NA;
-//    ia_na.hdr.l = sizeof(IA_NA) - sizeof(struct opt_hdr) + sizeof(IA_ADDR);
-//    ia_na.iaid = htonl(0x12345678);  // example IAID
-//    ia_na.t1 = htonl(0);  // T1 value
-//    ia_na.t2 = htonl(0);  // T2 value
-//
-//    memcpy(pointer, &ia_na, sizeof(IA_NA));
-//    pointer += sizeof(IA_NA);
-//    msg_size += sizeof(IA_NA);
-//
-//    // IAADDR
-//    IA_ADDR iaaddr;
-//    iaaddr.hdr.t = DHCPV6_OPTION_IAADDR;
-//    iaaddr.hdr.l = sizeof(IA_ADDR) - sizeof(struct opt_hdr);
-//    inet_pton(AF_INET6, "2001:db8::1", &iaaddr.addr);  // example IPv6 address
-//    iaaddr.preferred_lifetime = htonl(3600);  // example preferred lifetime
-//    iaaddr.valid_lifetime = htonl(7200);  // example valid lifetime
-//
-//    memcpy(pointer, &iaaddr, sizeof(IA_ADDR));
-//    pointer += sizeof(IA_ADDR);
-//    msg_size += sizeof(IA_ADDR);
+    IA_NA ia_na;
+    ia_na.hdr.t = htons(DHCPV6_OPTION_IA_NA);
+    ia_na.hdr.l = htons(12 + sizeof(struct opt_hdr) + iaaddr.hdr.l);
+    ia_na.iaid = htonl(0x12345678);  // example IAID
+    ia_na.t1 = htonl(43200);  // T1 value
+    ia_na.t2 = htonl(69120);  // T2 value
+    memcpy(&ia_na.iaAddr, &iaaddr, sizeof(struct opt_hdr) + 24);
+
+    pointer = pointer + sizeof(struct opt_hdr) + client_identifier->hdr.l;
+    msg_size += sizeof(struct opt_hdr) + 40;
+    memcpy(pointer, &ia_na, sizeof(struct opt_hdr) + 40);
 
 //    create client address
     client->sin6_port = htons(546);
