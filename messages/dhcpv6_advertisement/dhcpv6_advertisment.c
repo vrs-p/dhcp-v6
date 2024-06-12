@@ -88,7 +88,7 @@ void increment_ipv6_addr(struct in6_addr *addr) {
     }
 }
 
-void send_dhcpv6_advertisement(struct sockaddr_in6 *client, char *solicit_data, int bytes_received, int dhcp_sock, struct in6_addr* address) {
+void send_dhcpv6_adver_reply(struct sockaddr_in6 *client, char *solicit_data, int bytes_received, int dhcp_sock, struct in6_addr* address, int type) {
     struct msg_hdr* client_header = (struct msg_hdr*)solicit_data;
     int offset = find_offset_option(solicit_data, 1, bytes_received);
     struct opt_client_id* client_identifier = (struct opt_client_id*)(solicit_data + offset);
@@ -99,7 +99,13 @@ void send_dhcpv6_advertisement(struct sockaddr_in6 *client, char *solicit_data, 
 
     struct msg_hdr* header = (struct msg_hdr*)pointer;
     msg_size += sizeof(struct msg_hdr);
-    header->type = 2;
+    if (type == 1) {
+        header->type = 2;
+    } else if (type == 3) {
+        header->type = 7;
+    } else {
+        header->type = -1;
+    }
     header->xid = client_header->xid;
 
 // Prepare server identifier
@@ -146,7 +152,9 @@ void send_dhcpv6_advertisement(struct sockaddr_in6 *client, char *solicit_data, 
     IA_ADDR iaaddr;
     iaaddr.hdr.t = htons(DHCPV6_OPTION_IAADDR);
     iaaddr.hdr.l = htons(24);
-    increment_ipv6_addr(address);
+    if (type == 1) {
+        increment_ipv6_addr(address);
+    }
     iaaddr.addr = *address;
     iaaddr.preferred_lifetime = htonl(86400);  // example preferred lifetime
     iaaddr.valid_lifetime = htonl(172800);  // example valid lifetime
@@ -155,7 +163,13 @@ void send_dhcpv6_advertisement(struct sockaddr_in6 *client, char *solicit_data, 
     ia_na.hdr.t = htons(DHCPV6_OPTION_IA_NA);
     ia_na.hdr.l = htons(12 + sizeof(struct opt_hdr) + ntohs(iaaddr.hdr.l));
 //    offset = find_offset_option(solicit_data, 3, bytes_received);
-    offset = 36;
+    if (type == 1) {
+        offset = 36;
+    } else if (type == 3) {
+        offset = 61;
+    } else {
+        offset = -1;
+    }
     IA_NA* ia_na_c = (IA_NA*)(solicit_data + offset);
     ia_na.iaid = ia_na_c->iaid;
     ia_na.t1 = htonl(43200);  // T1 value

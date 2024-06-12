@@ -65,12 +65,13 @@ int init_dhcp_v6() {
             serving_req = 1;
             memcpy(served_req, current_req, sizeof(struct msg_hdr));
             memcpy(cl, &client, sizeof(struct sockaddr_in6));
-            send_dhcpv6_advertisement(cl, data, bytes_received, dhcp_socket, &address);
-        } else if (serving_req == 1 && current_req->type == 3 && memcmp(served_req, current_req, sizeof(struct msg_hdr)) == 0) {
+            send_dhcpv6_adver_reply(cl, data, bytes_received, dhcp_socket, &address, current_req->type);
+        } else if (serving_req == 1 && current_req->type == 3) {
             printf("Request message received");
             serving_req = 0;
-            // reply
-            memset(served_req, 0, sizeof(struct msg_hdr));
+            memcpy(served_req, current_req, sizeof(struct msg_hdr));
+            memcpy(cl, &client, sizeof(struct sockaddr_in6));
+            send_dhcpv6_adver_reply(cl, data, bytes_received, dhcp_socket, &address, current_req->type);
             free(cl);
         }
     }

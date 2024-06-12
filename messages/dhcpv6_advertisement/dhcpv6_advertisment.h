@@ -43,6 +43,6 @@ typedef struct domain_search_list {
     char domain_name[256];
 } DNS_SEARCH_LIST;
 
-void send_dhcpv6_advertisement(struct sockaddr_in6 *client, char *solicit_data, int bytes_received, int dhcp_sock, struct in6_addr* address);
+void send_dhcpv6_adver_reply(struct sockaddr_in6 *client, char *solicit_data, int bytes_received, int dhcp_sock, struct in6_addr* address, int type);
 
 #endif //DHCP_V6_DHCPV6_ADVERTISMENT_H
