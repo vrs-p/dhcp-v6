@@ -105,15 +105,32 @@ void send_dhcpv6_advertisement(struct sockaddr_in6 *client, char *solicit_data, 
     // IANA
     IA_NA ia_na;
     ia_na.hdr.t = htons(DHCPV6_OPTION_IA_NA);
-    ia_na.hdr.l = htons(12 + sizeof(struct opt_hdr) + iaaddr.hdr.l);
+    ia_na.hdr.l = htons(12 + sizeof(struct opt_hdr) + ntohs(iaaddr.hdr.l));
     ia_na.iaid = htonl(0x12345678);  // example IAID
     ia_na.t1 = htonl(43200);  // T1 value
     ia_na.t2 = htonl(69120);  // T2 value
-    memcpy(&ia_na.iaAddr, &iaaddr, sizeof(struct opt_hdr) + 24);
+    ia_na.iaAddr = iaaddr;
 
-    pointer = pointer + sizeof(struct opt_hdr) + client_identifier->hdr.l;
-    msg_size += sizeof(struct opt_hdr) + 40;
-    memcpy(pointer, &ia_na, sizeof(struct opt_hdr) + 40);
+    // Copy the IA_NA header first
+    pointer = pointer + sizeof(struct opt_hdr) + ntohs(client_identifier->hdr.l);
+    memcpy(pointer, &ia_na, sizeof(ia_na.hdr) + sizeof(ia_na.iaid) + sizeof(ia_na.t1) + sizeof(ia_na.t2));
+    pointer += sizeof(ia_na.hdr) + sizeof(ia_na.iaid) + sizeof(ia_na.t1) + sizeof(ia_na.t2);
+    msg_size += sizeof(ia_na.hdr) + sizeof(ia_na.iaid) + sizeof(ia_na.t1) + sizeof(ia_na.t2);
+
+    // Then copy the IAADDR
+    memcpy(pointer, &ia_na.iaAddr, sizeof(ia_na.iaAddr));
+    pointer += sizeof(ia_na.iaAddr);
+    msg_size += sizeof(ia_na.iaAddr);
+
+    // DNS Recursive Name Server Option
+    DNS_RECURSIVE_NAME_SERVER dns_servers;
+    dns_servers.hdr.t = htons(23);  // Option code for DNS Recursive Name Server
+    dns_servers.hdr.l = htons(sizeof(struct in6_addr));
+    inet_pton(AF_INET6, "2001:4860:4860::8888", &dns_servers.addrs);
+
+    memcpy(pointer, &dns_servers, sizeof(DNS_RECURSIVE_NAME_SERVER));
+    pointer += sizeof(DNS_RECURSIVE_NAME_SERVER);
+    msg_size += sizeof(DNS_RECURSIVE_NAME_SERVER);
 
 //    create client address
     client->sin6_port = htons(546);

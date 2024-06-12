@@ -29,6 +29,12 @@ typedef struct ia_na {
     IA_ADDR iaAddr;
 } __attribute__((packed)) IA_NA;
 
+// DNS recursive name server option
+typedef struct dns_recursive_name_server {
+    struct opt_hdr hdr;
+    struct in6_addr addrs;
+} DNS_RECURSIVE_NAME_SERVER;
+
 
 void send_dhcpv6_advertisement(struct sockaddr_in6 *client, char *solicit_data, int bytes_received, int dhcp_sock);
 
