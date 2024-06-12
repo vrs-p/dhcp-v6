@@ -5,9 +5,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "dhcpv6_advertisment.h"
-
 #include <arpa/inet.h>
+#include "dhcpv6_advertisment.h"
 
 int read_machine_id(uint8_t **duid, size_t *duid_len) {
     FILE *file = fopen("/etc/machine-id", "r");
@@ -115,7 +114,10 @@ void send_dhcpv6_advertisement(struct sockaddr_in6 *client, char *solicit_data, 
     IA_NA ia_na;
     ia_na.hdr.t = htons(DHCPV6_OPTION_IA_NA);
     ia_na.hdr.l = htons(12 + sizeof(struct opt_hdr) + ntohs(iaaddr.hdr.l));
-    ia_na.iaid = htonl(0x12345678);  // example IAID
+//    offset = find_offset_option(solicit_data, 3, bytes_received);
+    offset = 36;
+    IA_NA* ia_na_c = (IA_NA*)(solicit_data + offset);
+    ia_na.iaid = ia_na_c->iaid;
     ia_na.t1 = htonl(43200);  // T1 value
     ia_na.t2 = htonl(69120);  // T2 value
     ia_na.iaAddr = iaaddr;
