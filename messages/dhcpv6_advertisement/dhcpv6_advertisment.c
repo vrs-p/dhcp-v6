@@ -51,7 +51,15 @@ int find_offset_option(char *data, uint16_t option, int bytes_received) {
     return -1;
 }
 
-void send_dhcpv6_advertisement(struct sockaddr_in6 *client, char *solicit_data, int bytes_received, int dhcp_sock) {
+void increment_ipv6_addr(struct in6_addr *addr) {
+    for (int i = 15; i >= 0; --i) {
+        if (addr->s6_addr[i]++ != 0xff) {
+            break;
+        }
+    }
+}
+
+void send_dhcpv6_advertisement(struct sockaddr_in6 *client, char *solicit_data, int bytes_received, int dhcp_sock, struct in6_addr* address) {
     struct msg_hdr* client_header = (struct msg_hdr*)solicit_data;
     int offset = find_offset_option(solicit_data, 1, bytes_received);
     struct opt_client_id* client_identifier = (struct opt_client_id*)(solicit_data + offset);
@@ -99,7 +107,8 @@ void send_dhcpv6_advertisement(struct sockaddr_in6 *client, char *solicit_data, 
     IA_ADDR iaaddr;
     iaaddr.hdr.t = htons(DHCPV6_OPTION_IAADDR);
     iaaddr.hdr.l = htons(24);
-    inet_pton(AF_INET6, "2001:db8::1", &iaaddr.addr);  // example IPv6 address
+    increment_ipv6_addr(address);
+    iaaddr.addr = *address;
     iaaddr.preferred_lifetime = htonl(86400);  // example preferred lifetime
     iaaddr.valid_lifetime = htonl(172800);  // example valid lifetime
     // IANA

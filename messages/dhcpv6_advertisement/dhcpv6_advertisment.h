@@ -36,6 +36,6 @@ typedef struct dns_recursive_name_server {
 } DNS_RECURSIVE_NAME_SERVER;
 
 
-void send_dhcpv6_advertisement(struct sockaddr_in6 *client, char *solicit_data, int bytes_received, int dhcp_sock);
+void send_dhcpv6_advertisement(struct sockaddr_in6 *client, char *solicit_data, int bytes_received, int dhcp_sock, struct in6_addr* address);
 
 #endif //DHCP_V6_DHCPV6_ADVERTISMENT_H

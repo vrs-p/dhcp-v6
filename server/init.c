@@ -9,7 +9,11 @@
 #include "init.h"
 #include "../messages/dhcpv6_advertisement/dhcpv6_advertisment.h"
 
+struct in6_addr address;
+
 int init_dhcp_v6() {
+    inet_pton(AF_INET6, "2001:db8:1::1", &address);
+
     char buffer[1024];
     int dhcp_socket;
     struct sockaddr_in6 my_addr, client;
@@ -61,7 +65,7 @@ int init_dhcp_v6() {
             serving_req = 1;
             memcpy(served_req, current_req, sizeof(struct msg_hdr));
             memcpy(cl, &client, sizeof(struct sockaddr_in6));
-            send_dhcpv6_advertisement(cl, data, bytes_received, dhcp_socket);
+            send_dhcpv6_advertisement(cl, data, bytes_received, dhcp_socket, &address);
         } else if (serving_req == 1 && current_req->type == 3 && memcmp(served_req, current_req, sizeof(struct msg_hdr)) == 0) {
             printf("Request message received");
             serving_req = 0;
