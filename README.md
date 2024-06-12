@@ -12,7 +12,7 @@
 - Create every DHCPv6 stateful message
   - [x] Router advertisment
   - [ ] Router solicit
-  - [ ] Router advertise
+  - [x] Router advertise
   - [ ] Router request
-  - [ ] Router reply
+  - [x] Router reply
 - How it should be done from my point of view is that you will listen on every request, after the message is received you will reply with specific response

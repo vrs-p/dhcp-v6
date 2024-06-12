@@ -11,6 +11,15 @@
 
 struct in6_addr address;
 
+/**
+ * @brief Initializes a DHCPv6 server.
+ *
+ * This function sets up a DHCPv6 server. It creates a socket, binds it to an address,
+ * and joins a multicast group. It then enters a loop where it listens for incoming
+ * DHCPv6 messages and responds to them as necessary.
+ *
+ * @return The socket descriptor of the DHCPv6 server.
+ */
 int init_dhcp_v6() {
     inet_pton(AF_INET6, "2001:db8:1::1", &address);
 

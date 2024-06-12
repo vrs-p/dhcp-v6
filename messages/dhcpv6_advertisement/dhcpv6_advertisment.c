@@ -8,6 +8,15 @@
 #include <arpa/inet.h>
 #include "dhcpv6_advertisment.h"
 
+/**
+ * Reads the machine ID from the /etc/machine-id file.
+ * The machine ID is a unique identifier for the machine, represented as a hexadecimal string.
+ * This function converts the hexadecimal string to a byte array.
+ *
+ * @param duid A pointer to a pointer for the byte array. This function will allocate memory for the byte array.
+ * @param duid_len A pointer to a size_t where the length of the byte array will be stored.
+ * @return 0 on success, -1 on failure (e.g., if the file could not be opened or read, or if memory allocation failed).
+ */
 int read_machine_id(uint8_t **duid, size_t *duid_len) {
     FILE *file = fopen("/etc/machine-id", "r");
     if (!file) {
@@ -38,6 +47,15 @@ int read_machine_id(uint8_t **duid, size_t *duid_len) {
     return 0;
 }
 
+/**
+ * Reads the client ID from the /etc/client-id file.
+ * The client ID is a unique identifier for the client, represented as a hexadecimal string.
+ * This function converts the hexadecimal string to a byte array.
+ *
+ * @param duid A pointer to a pointer for the byte array. This function will allocate memory for the byte array.
+ * @param duid_len A pointer to a size_t where the length of the byte array will be stored.
+ * @return 0 on success, -1 on failure (e.g., if the file could not be opened or read, or if memory allocation failed).
+ */
 int read_client_id(uint8_t **duid, size_t *duid_len) {
     FILE *file = fopen("/etc/client-id", "r");
     if (!file) {
@@ -68,6 +86,14 @@ int read_client_id(uint8_t **duid, size_t *duid_len) {
     return 0;
 }
 
+/**
+ * Finds the offset of a specific option in a DHCPv6 message.
+ *
+ * @param data A pointer to the start of the DHCPv6 message.
+ * @param option The option to find.
+ * @param bytes_received The total number of bytes in the DHCPv6 message.
+ * @return The offset of the option in the DHCPv6 message, or -1 if the option was not found.
+ */
 int find_offset_option(char *data, uint16_t option, int bytes_received) {
     size_t current_offset = sizeof(struct msg_hdr) + 1;
     while (current_offset <= bytes_received) {
@@ -80,6 +106,12 @@ int find_offset_option(char *data, uint16_t option, int bytes_received) {
     return -1;
 }
 
+/**
+ * Increments an IPv6 address by one.
+ * This function handles carry-over: if a byte is 0xff and is incremented, it will wrap around to 0x00 and the next byte will be incremented.
+ *
+ * @param addr A pointer to the IPv6 address to increment.
+ */
 void increment_ipv6_addr(struct in6_addr *addr) {
     for (int i = 15; i >= 0; --i) {
         if (addr->s6_addr[i]++ != 0xff) {
@@ -88,6 +120,22 @@ void increment_ipv6_addr(struct in6_addr *addr) {
     }
 }
 
+/**
+ * Sends a DHCPv6 Advertise or Reply message to a client.
+ *
+ * This function constructs a DHCPv6 message with the appropriate options,
+ * including the server ID, client ID, IA_NA, IAADDR, DNS servers, and domain search list.
+ * The type of message (Advertise or Reply) is determined by the 'type' parameter.
+ *
+ * @param client A pointer to a sockaddr_in6 structure containing the client's address.
+ * @param solicit_data A pointer to the data received in the Solicit message from the client.
+ * @param bytes_received The number of bytes received in the Solicit message.
+ * @param dhcp_sock The socket descriptor for the DHCP socket.
+ * @param address A pointer to an in6_addr structure containing the IPv6 address to be assigned to the client.
+ * @param type The type of message to send (1 for Advertise, 2 for Reply).
+ *
+ * At the end of this function, it sends the constructed DHCPv6 message as a UDP packet to the client.
+ */
 void send_dhcpv6_adver_reply(struct sockaddr_in6 *client, char *solicit_data, int bytes_received, int dhcp_sock, struct in6_addr* address, int type) {
     struct msg_hdr* client_header = (struct msg_hdr*)solicit_data;
     int offset = find_offset_option(solicit_data, 1, bytes_received);

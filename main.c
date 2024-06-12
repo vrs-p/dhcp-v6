@@ -12,6 +12,15 @@
 
 #define BUF_SIZE 1024
 
+/**
+ * @brief Initializes DHCP communication.
+ *
+ * This function sets up a raw socket for DHCP communication, binds it to an address,
+ * and joins a multicast group. It then enters a loop where it listens for incoming
+ * Router Solicitation messages and responds to them with a Router Advertisement message.
+ *
+ * @return NULL after closing the socket.
+ */
 void * init_dhcp_communication() {
     int sockfd;
     char buffer[BUF_SIZE];
@@ -66,12 +75,28 @@ void * init_dhcp_communication() {
     return 0;
 }
 
+/**
+ * @brief Initializes a DHCPv6 server.
+ *
+ * This function initializes a DHCPv6 server by calling the init_dhcp_v6 function.
+ * After the server is initialized, the function closes the socket and returns.
+ *
+ * @return NULL after closing the socket.
+ */
 void * init_dhcp_server() {
     int sock = init_dhcp_v6();
     close(sock);
     return 0;
 }
 
+/**
+ * @brief Main function.
+ *
+ * This function creates new threads for both DHCP communication and the DHCPv6 server.
+ * It then waits for both threads to finish their execution.
+ *
+ * @return 0 on successful execution.
+ */
 int main() {
     pthread_t /*dhcp_communication,*/ dhcp_server;
 

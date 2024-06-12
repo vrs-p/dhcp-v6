@@ -4,6 +4,15 @@
 
 #include "router_advertisement.h"
 
+/**
+ * Computes the Internet Checksum of the given data.
+ * The Internet Checksum is a checksum used in the Internet Protocol suite for error detection.
+ * It is used in protocols like IP, TCP, and UDP.
+ *
+ * @param b A pointer to the data to compute the checksum of.
+ * @param len The length of the data in bytes.
+ * @return The computed checksum.
+ */
 unsigned short checksum(void *b, int len) {
     unsigned short *buf = b;
     unsigned int sum = 0;
@@ -20,6 +29,16 @@ unsigned short checksum(void *b, int len) {
     return result;
 }
 
+/**
+ * Sends a Router Advertisement (RA) message to a multicast address.
+ *
+ * This function creates a raw socket, binds it to an interface, and constructs an ICMPv6 RA message.
+ * The RA message includes options for the source link-layer address, MTU, and prefix information.
+ * The function then calculates the ICMPv6 checksum and sends the message to the multicast address.
+ *
+ * This function is typically used by routers to advertise their presence together with various link and Internet parameters.
+ * The function exits the program on any failure (e.g., if the socket cannot be created or the message cannot be sent).
+ */
 void send_router_advertisement_response() {
     // Create a raw socket
     int sockfd = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);

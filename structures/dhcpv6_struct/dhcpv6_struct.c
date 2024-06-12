@@ -45,6 +45,11 @@ struct opt_client_id {
     uint8_t duid[];
 } __attribute__((packed));
 
+/**
+ * struct opt_server_id - DHCPv6 Server Identifier option
+ * @hdr:        Option header
+ * @duid:       Server DUID
+ */
 struct opt_server_id {
     struct opt_hdr hdr;
     uint8_t duid[128];
