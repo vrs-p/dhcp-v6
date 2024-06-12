@@ -35,6 +35,13 @@ typedef struct dns_recursive_name_server {
     struct in6_addr addrs;
 } DNS_RECURSIVE_NAME_SERVER;
 
+// Domain search list
+typedef struct domain_search_list {
+    struct opt_hdr hdr;
+    // for simplicity just one
+    uint16_t domain_name_length;
+    char domain_name[256];
+} DNS_SEARCH_LIST;
 
 void send_dhcpv6_advertisement(struct sockaddr_in6 *client, char *solicit_data, int bytes_received, int dhcp_sock, struct in6_addr* address);
 

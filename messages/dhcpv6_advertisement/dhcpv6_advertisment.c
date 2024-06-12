@@ -38,6 +38,36 @@ int read_machine_id(uint8_t **duid, size_t *duid_len) {
     return 0;
 }
 
+int read_client_id(uint8_t **duid, size_t *duid_len) {
+    FILE *file = fopen("/etc/client-id", "r");
+    if (!file) {
+        perror("Failed to open /etc/client-id");
+        return -1;
+    }
+
+    char hex_string[33]; // /etc/machine-id is 32 characters long
+    if (fgets(hex_string, sizeof(hex_string), file) == NULL) {
+        perror("Failed to read /etc/client-id");
+        fclose(file);
+        return -1;
+    }
+    fclose(file);
+
+    // Convert hex string to byte array
+    *duid_len = strlen(hex_string) / 2;
+    *duid = malloc(*duid_len);
+    if (!*duid) {
+        perror("Failed to allocate memory for DUID");
+        return -1;
+    }
+
+    for (size_t i = 0; i < *duid_len; i++) {
+        sscanf(&hex_string[i * 2], "%2hhx", &(*duid)[i]);
+    }
+
+    return 0;
+}
+
 int find_offset_option(char *data, uint16_t option, int bytes_received) {
     size_t current_offset = sizeof(struct msg_hdr) + 1;
     while (current_offset <= bytes_received) {
@@ -98,6 +128,16 @@ void send_dhcpv6_advertisement(struct sockaddr_in6 *client, char *solicit_data, 
     msg_size += sizeof(struct opt_hdr) + client_identifier->hdr.l;
     client_identifier->hdr.t = htons(1);
     client_identifier->hdr.l = htons(client_identifier->hdr.l);
+    //for testing
+    uint8_t *client_duid;
+    size_t client_duid_len;
+    if (read_client_id(&client_duid, &client_duid_len) != 0) {
+        fprintf(stderr, "Error reading client ID\n");
+        return;
+    }
+    client_identifier->hdr.l = htons(client_duid_len);
+    memcpy(client_identifier->duid, client_duid, client_duid_len);
+
     memcpy(pointer, client_identifier, sizeof(struct opt_hdr) + htons(client_identifier->hdr.l));
 
 
@@ -142,6 +182,18 @@ void send_dhcpv6_advertisement(struct sockaddr_in6 *client, char *solicit_data, 
     memcpy(pointer, &dns_servers, sizeof(DNS_RECURSIVE_NAME_SERVER));
     pointer += sizeof(DNS_RECURSIVE_NAME_SERVER);
     msg_size += sizeof(DNS_RECURSIVE_NAME_SERVER);
+
+    // Domain Search List Option
+    DNS_SEARCH_LIST domain_search;
+    domain_search.hdr.t = htons(24);  // Option code for Domain Search List
+    const char* domain_name = "example.com";
+    domain_search.domain_name_length = htons(strlen(domain_name));
+    domain_search.hdr.l = htons(sizeof(domain_search.domain_name_length) + strlen(domain_name));
+    memcpy(domain_search.domain_name, domain_name, strlen(domain_name));
+
+    memcpy(pointer, &domain_search, sizeof(struct opt_hdr) + sizeof(domain_search.domain_name_length) + strlen(domain_name));
+    pointer += sizeof(struct opt_hdr) + sizeof(domain_search.domain_name_length) + strlen(domain_name);
+    msg_size += sizeof(struct opt_hdr) + sizeof(domain_search.domain_name_length) + strlen(domain_name);
 
 //    create client address
     client->sin6_port = htons(546);
