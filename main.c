@@ -73,12 +73,12 @@ void * init_dhcp_server() {
 }
 
 int main() {
-    pthread_t dhcp_communication, dhcp_server;
+    pthread_t /*dhcp_communication,*/ dhcp_server;
 
-    pthread_create(&dhcp_communication, NULL, init_dhcp_communication, NULL);
+//    pthread_create(&dhcp_communication, NULL, init_dhcp_communication, NULL);
     pthread_create(&dhcp_server, NULL, init_dhcp_server, NULL);
 
-    pthread_join(dhcp_communication, NULL);
+//    pthread_join(dhcp_communication, NULL);
     pthread_join(dhcp_server, NULL);
     return 0;
 }
